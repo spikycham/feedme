@@ -20,17 +20,17 @@ func main() {
 	// Load related environment variables.
 	dotenv.Load(".env")
 	port := os.Getenv("PORT")
-	psqlUri := os.Getenv("POSTGRES_URI")
+	sqlUri := os.Getenv("SQL_URI")
 
 	// Connect to postgres database.
-	pool, err := db.Connect(ctx, psqlUri)
+	db, err := db.Connect(ctx, sqlUri)
 	if err != nil {
-		log.Error("failed to connect to postgres", err)
+		log.Error("failed to connect to database", err)
 	}
 
 	// Create the multiplexer and bind the routes.
 	routr := router.New()
-	routr.Register(pool)
+	routr.Register(db)
 	// Add all middlewares.
 	handler := middleware.Register(routr)
 
