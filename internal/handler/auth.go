@@ -11,6 +11,15 @@ import (
 	"github.com/spikycham/feedme/pkg/token"
 )
 
+// The initial structure and interface.
+type AuthRepository interface {
+	GetUserByAccount(ctx context.Context, account string) (*repository.User, error)
+}
+
+type AuthHandler struct {
+	r AuthRepository
+}
+
 func NewAuthHandler(r AuthRepository) AuthHandler {
 	return AuthHandler{r: r}
 }
@@ -40,14 +49,6 @@ type (
 	}
 )
 
-type AuthRepository interface {
-	GetUserByAccount(ctx context.Context, account string) (*repository.User, error)
-}
-
-type AuthHandler struct {
-	r AuthRepository
-}
-
 // Response the token and the user profiles.
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 	var body RequestLogin
@@ -76,7 +77,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 		network.Error(w, http.StatusInternalServerError)
 		return err
 	}
-	// TODO: store the refresh token to postgres database.
+	// TODO: store the refresh token to sqlite database.
 	// Use psql is already enough for this project.
 	rt, err := token.RandBase64(32)
 	if err != nil {

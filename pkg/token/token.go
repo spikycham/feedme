@@ -42,12 +42,12 @@ func Validate(tokenStr string) (string, error) {
 		return "", errors.New("invalid claims")
 	}
 
-	userID, ok := claims["user_id"].(string)
+	userId, ok := claims["user_id"].(string)
 	if !ok {
 		return "", errors.New("invalid user_id")
 	}
 
-	return userID, nil
+	return userId, nil
 }
 
 func RandBase64(n int) (string, error) {

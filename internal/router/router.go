@@ -32,13 +32,25 @@ func (r *Router) Register(db *sql.DB) {
 		return nil
 	})
 
-	registerAuth(r, db)
+	r.registerAuth(db)
+	r.registerUser(db)
 }
 
-func registerAuth(router *Router, db *sql.DB) {
+// Routes registration helper functions.
+func (router *Router) registerAuth(db *sql.DB) {
 	r := repository.NewAuthRepository(db)
 	h := handler.NewAuthHandler(r)
 
 	router.handle("POST /api/auth/login", h.Login)
 	router.handle("POST /api/auth/logout", h.Logout)
+}
+
+func (router *Router) registerUser(db *sql.DB) {
+	r := repository.NewUserRepository(db)
+	h := handler.NewUserHandler(r)
+
+	router.handle("GET /api/user/me", h.Me)
+	router.handle("POST /api/user/change/avatar", h.ChangeAvatarURI)
+	router.handle("POST /api/user/change/username", h.ChangeUsername)
+	router.handle("POST /api/user/change/password", h.ChangePassword)
 }

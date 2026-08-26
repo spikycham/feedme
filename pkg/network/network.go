@@ -34,6 +34,10 @@ func Write[Data any](w http.ResponseWriter, data *Data) error {
 	return nil
 }
 
+func WriteEmpty(w http.ResponseWriter, status int) {
+	w.WriteHeader(status)
+}
+
 func Error(w http.ResponseWriter, status int) {
 	w.WriteHeader(status)
 }
