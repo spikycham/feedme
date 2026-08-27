@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 func NewAuthRepository(db *sql.DB) *AuthRepository {
@@ -15,13 +16,15 @@ type (
 	UserRole int
 
 	User struct {
-		ID        int
-		UserID    string
-		Name      string
-		Account   string
-		Password  string
-		Role      UserRole
-		AvatarURI *string
+		ID                   int
+		UserID               string
+		Name                 string
+		Account              string
+		Password             string
+		Role                 UserRole
+		AvatarURI            *string
+		ProfileBackgroundURI *string
+		CreatedAt            int64
 	}
 )
 
@@ -36,8 +39,8 @@ type AuthRepository struct {
 
 func (r *AuthRepository) GetUserByAccount(ctx context.Context, account string) (*User, error) {
 	var user User
-	if err := r.db.QueryRowContext(ctx, "SELECT id, user_id, name, account, password, role, avatar_uri FROM users WHERE account = $1", account).Scan(&user.ID,
-		&user.UserID, &user.Name, &user.Account, &user.Password, &user.Role, &user.AvatarURI); err != nil {
+	if err := r.db.QueryRowContext(ctx, "SELECT id, user_id, name, account, password, role, avatar_uri, profile_background_uri, created_at FROM users WHERE account = ?", account).Scan(&user.ID,
+		&user.UserID, &user.Name, &user.Account, &user.Password, &user.Role, &user.AvatarURI, &user.ProfileBackgroundURI, &user.CreatedAt); err != nil {
 		return nil, err
 	}
 	return &user, nil

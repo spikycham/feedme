@@ -19,16 +19,17 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 func (r *UserRepository) GetUserByUserID(ctx context.Context, userId string) (*User, error) {
 	var user User
-	if err := r.db.QueryRowContext(ctx, "SELECT user_id, name, account, role, avatar_uri FROM users WHERE user_id = $1", userId).Scan(
+	if err := r.db.QueryRowContext(ctx, "SELECT user_id, name, account, role, avatar_uri, profile_background_uri, created_at FROM users WHERE user_id = ?", userId).Scan(
 		&user.UserID,
 		&user.Name,
 		&user.Account,
 		&user.Role,
 		&user.AvatarURI,
+		&user.ProfileBackgroundURI,
+		&user.CreatedAt,
 	); err != nil {
 		return nil, err
 	}
-
 	return &user, nil
 }
 

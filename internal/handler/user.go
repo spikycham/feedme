@@ -30,11 +30,13 @@ func NewUserHandler(r UserRepository) *UserHandler {
 type (
 	// Me.
 	ResponseMe struct {
-		UserID    string              `json:"user_id"`
-		Name      string              `json:"name"`
-		Account   string              `json:"account"`
-		Role      repository.UserRole `json:"role"`
-		AvatarURI *string             `json:"avatar_uri"`
+		UserID               string              `json:"user_id"`
+		Name                 string              `json:"name"`
+		Account              string              `json:"account"`
+		Role                 repository.UserRole `json:"role"`
+		AvatarURI            *string             `json:"avatar_uri"`
+		ProfileBackgroundURI *string             `json:"profile_background_uri"`
+		CreatedAt            int64               `json:"created_at"`
 	}
 	// Change avatar uri, username, password.
 	RequestChangeProfile struct {
@@ -55,11 +57,13 @@ func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if err := network.Write(w, &ResponseMe{
-		UserID:    me.UserID,
-		Name:      me.Name,
-		Account:   me.Account,
-		Role:      me.Role,
-		AvatarURI: me.AvatarURI,
+		UserID:               me.UserID,
+		Name:                 me.Name,
+		Account:              me.Account,
+		Role:                 me.Role,
+		AvatarURI:            me.AvatarURI,
+		ProfileBackgroundURI: me.ProfileBackgroundURI,
+		CreatedAt:            me.CreatedAt,
 	}); err != nil {
 		return err
 	}

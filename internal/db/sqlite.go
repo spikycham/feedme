@@ -27,7 +27,8 @@ func Connect(ctx context.Context, path string) (*sql.DB, error) {
 			password TEXT NOT NULL,
 			role INTEGER NOT NULL DEFAULT 0,
 			avatar_uri TEXT NOT NULL DEFAULT '',
-			created_at TIMESTAMPE NOT NULL DEFAULT CURRENT_TIMESTAMP
+			profile_background_uri TEXT NOT NULL DEFAULT '',
+			created_at INTEGER NOT NULL DEFAULT (unixepoch())
 		)`,
 	); err != nil {
 		return nil, err

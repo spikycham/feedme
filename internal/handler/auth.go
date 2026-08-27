@@ -37,11 +37,13 @@ type (
 		RefreshToken string `json:"refresh_token"`
 	}
 	ResponseUser struct {
-		UserID    string              `json:"user_id"`
-		Name      string              `json:"name"`
-		Account   string              `json:"account"`
-		Role      repository.UserRole `json:"role"`
-		AvatarURI *string             `json:"avatar_uri"`
+		UserID               string              `json:"user_id"`
+		Name                 string              `json:"name"`
+		Account              string              `json:"account"`
+		Role                 repository.UserRole `json:"role"`
+		AvatarURI            *string             `json:"avatar_uri"`
+		ProfileBackgroundURI *string             `json:"profile_background_uri"`
+		CreatedAt            int64               `json:"created_at"`
 	}
 	ResponseLogin struct {
 		Token ResponseToken `json:"token"`
@@ -91,11 +93,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 			RefreshToken: rt,
 		},
 		User: ResponseUser{
-			UserID:    user.UserID,
-			Name:      user.Name,
-			Account:   user.Account,
-			Role:      user.Role,
-			AvatarURI: user.AvatarURI,
+			UserID:               user.UserID,
+			Name:                 user.Name,
+			Account:              user.Account,
+			Role:                 user.Role,
+			AvatarURI:            user.AvatarURI,
+			ProfileBackgroundURI: user.ProfileBackgroundURI,
+			CreatedAt:            user.CreatedAt,
 		},
 	})
 	return nil
