@@ -50,7 +50,5 @@ func (router *Router) registerUser(db *sql.DB) {
 	h := handler.NewUserHandler(r)
 
 	router.handle("GET /api/user/me", h.Me)
-	router.handle("POST /api/user/change/avatar", h.ChangeAvatarURI)
-	router.handle("POST /api/user/change/username", h.ChangeUsername)
-	router.handle("POST /api/user/change/password", h.ChangePassword)
+	router.handle("PATCH /api/user/profile", h.ChangeProfile)
 }
