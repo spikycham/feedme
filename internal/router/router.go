@@ -34,6 +34,7 @@ func (r *Router) Register(db *sql.DB) {
 
 	r.registerAuth(db)
 	r.registerUser(db)
+	r.registerFile() // just for uploading files
 }
 
 // Routes registration helper functions.
@@ -51,4 +52,9 @@ func (router *Router) registerUser(db *sql.DB) {
 
 	router.handle("GET /api/user/me", h.Me)
 	router.handle("PATCH /api/user/profile", h.ChangeProfile)
+}
+
+func (router *Router) registerFile() {
+	h := handler.NewFileHandler()
+	router.handle("POST /api/file", h.Upload)
 }

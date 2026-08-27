@@ -17,4 +17,5 @@ var (
 // Bussiness validation errors.
 var (
 	InvalidURIPrefix = errors.New("invalid uri prefix")
+	InvalidFileExt   = errors.New("invalid file extension")
 )

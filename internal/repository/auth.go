@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
 )
 
 func NewAuthRepository(db *sql.DB) *AuthRepository {
