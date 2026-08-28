@@ -20,6 +20,10 @@ func NewFileHandler() *FileHandler {
 	return &FileHandler{}
 }
 
+type ResponseUpload struct {
+	URL string `json:"url"`
+}
+
 func (f *FileHandler) Upload(w http.ResponseWriter, r *http.Request) error {
 	file, header, err := r.FormFile("file")
 	if err != nil {
@@ -57,12 +61,15 @@ func (f *FileHandler) Upload(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	prefix := os.Getenv("ASSET_URL_PREFIX")
+	resp := ResponseUpload{URL: prefix + filename}
+
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
 		if entry.Name() == filename {
-			network.WriteEmpty(w, http.StatusOK)
+			network.Write(w, &resp)
 			return nil
 		}
 	}
@@ -74,6 +81,6 @@ func (f *FileHandler) Upload(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	network.WriteEmpty(w, http.StatusCreated)
+	network.Write(w, &resp)
 	return nil
 }
