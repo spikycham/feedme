@@ -18,4 +18,5 @@ var (
 var (
 	InvalidURIPrefix = errors.New("invalid uri prefix")
 	InvalidFileExt   = errors.New("invalid file extension")
+	ErrOutOfRange    = errors.New("the value is out of range")
 )

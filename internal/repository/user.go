@@ -14,7 +14,7 @@ type UserRepository struct {
 }
 
 func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{db: db}
+	return &UserRepository{db}
 }
 
 func (r *UserRepository) GetUserByUserID(ctx context.Context, userId string) (*User, error) {

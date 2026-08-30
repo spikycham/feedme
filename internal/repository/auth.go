@@ -5,10 +5,12 @@ import (
 	"database/sql"
 )
 
+type AuthRepository struct {
+	db *sql.DB
+}
+
 func NewAuthRepository(db *sql.DB) *AuthRepository {
-	return &AuthRepository{
-		db: db,
-	}
+	return &AuthRepository{db}
 }
 
 type (
@@ -20,21 +22,17 @@ type (
 		Name                 string
 		Account              string
 		Password             string
-		Role                 UserRole
-		AvatarURI            *string
-		ProfileBackgroundURI *string
+		Role                 UserRole // 0 customer, 1 merchant
+		AvatarURI            string
+		ProfileBackgroundURI string
 		CreatedAt            int64
 	}
 )
 
 const (
-	RoleCustomer UserRole = iota
-	RoleMerchant
+	UserRoleCustomer UserRole = iota
+	UserRoleMerchant
 )
-
-type AuthRepository struct {
-	db *sql.DB
-}
 
 func (r *AuthRepository) GetUserByAccount(ctx context.Context, account string) (*User, error) {
 	var user User
