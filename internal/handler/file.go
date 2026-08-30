@@ -24,6 +24,10 @@ type ResponseUpload struct {
 	URL string `json:"url"`
 }
 
+// NOTE: put the avatars under the "~/assets/feedme/avatars/"
+// put the profile background images under the "~/assets/feedme/backgrounds/"
+// put the food images under the "~/assets/feedme/foods/:food_id/"
+// we might need to clean up the resources manually.
 func (f *FileHandler) Upload(w http.ResponseWriter, r *http.Request) error {
 	file, header, err := r.FormFile("file")
 	if err != nil {
