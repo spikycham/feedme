@@ -53,8 +53,7 @@ func Connect(ctx context.Context, path string) (*sql.DB, error) {
 		CREATE TABLE IF NOT EXISTS orders (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			order_id TEXT NOT NULL,
-			user_id TEXT NOT NULL,
-			status INTEGER NOT NULL,
+			status INTEGER NOT NULL DEFAULT 0,
 			amount REAL NOT NULL,
 			created_at INTEGER NOT NULL DEFAULT (unixepoch()),
 			done_at INTEGER NOT NULL DEFAULT -1
@@ -73,7 +72,6 @@ func Connect(ctx context.Context, path string) (*sql.DB, error) {
 		CREATE TABLE IF NOT EXISTS food_comments (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			food_id TEXT NOT NULL,
-			user_id TEXT NOT NULL,
 			detail TEXT NOT NULL,
 			created_at INTEGER NOT NULL DEFAULT (unixepoch()),
 			deleted_at INTEGER NOT NULL DEFAULT -1
@@ -81,7 +79,6 @@ func Connect(ctx context.Context, path string) (*sql.DB, error) {
 		CREATE TABLE IF NOT EXISTS order_comments (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			order_id TEXT NOT NULL,
-			user_id TEXT NOT NULL,
 			detail TEXT NOT NULL,
 			created_at INTEGER NOT NULL DEFAULT (unixepoch()),
 			deleted_at INTEGER NOT NULL DEFAULT -1

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/spikycham/feedme/internal/constant"
@@ -9,13 +8,6 @@ import (
 	"github.com/spikycham/feedme/pkg/network"
 	"github.com/spikycham/feedme/pkg/random"
 )
-
-type FoodRepository interface {
-	SelectAllFoods(ctx context.Context) error
-	InsertFood(ctx context.Context, p repository.InsertFoodParams) error
-	UpdateFoodByFoodID(ctx context.Context, foodId string, p *repository.UpdateFoodParams) error
-	DeleteFoodByFoodID(ctx context.Context, foodId string) error
-}
 
 type FoodHandler struct {
 	r *repository.FoodRepository

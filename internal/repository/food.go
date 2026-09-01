@@ -50,7 +50,7 @@ const (
 )
 
 func (r *FoodRepository) SelectAllFoods(ctx context.Context) ([]Food, error) {
-	var foods []Food
+	foods := make([]Food, 0)
 
 	rows, err := r.db.QueryContext(ctx, "SELECT food_id, name, detail, prize, rate, required_time, image_uris, category, created_at, deleted_at FROM foods")
 	if err != nil {

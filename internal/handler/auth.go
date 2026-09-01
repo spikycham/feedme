@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,16 +11,12 @@ import (
 )
 
 // The initial structure and interface.
-type AuthRepository interface {
-	GetUserByAccount(ctx context.Context, account string) (*repository.User, error)
-}
-
 type AuthHandler struct {
-	r AuthRepository
+	r *repository.AuthRepository
 }
 
-func NewAuthHandler(r AuthRepository) AuthHandler {
-	return AuthHandler{r: r}
+func NewAuthHandler(r *repository.AuthRepository) AuthHandler {
+	return AuthHandler{r}
 }
 
 // Handlers type structs.

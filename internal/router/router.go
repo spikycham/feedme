@@ -36,6 +36,7 @@ func (r *Router) Register(db *sql.DB) {
 	r.registerUser(db)
 	r.registerFile() // just for uploading files
 	r.registerFood(db)
+	r.registerOrder(db)
 }
 
 // Routes registration helper functions.
@@ -68,4 +69,13 @@ func (router *Router) registerFood(db *sql.DB) {
 	router.handle("POST /api/food", h.CreateFood)
 	router.handle("PATCH /api/food", h.UpdateFood)
 	router.handle("DELETE /api/food", h.DeleteFood)
+}
+
+func (router *Router) registerOrder(db *sql.DB) {
+	r := repository.NewOrderRepository(db)
+	h := handler.NewOrderHandler(r)
+
+	router.handle("GET /api/order/list", h.GetOrderList)
+	router.handle("POST /api/order", h.CreateOrder)
+	router.handle("PUT /api/order/status", h.UpdateOrderStatus)
 }

@@ -12,6 +12,7 @@ var (
 // Database errors.
 var (
 	NoAffectedRows = errors.New("no affected rows")
+	NoDataFound    = errors.New("no data found")
 )
 
 // Bussiness validation errors.

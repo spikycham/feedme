@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -13,16 +12,12 @@ import (
 )
 
 // The initial structure and interface.
-type UserRepository interface {
-	GetUserByUserID(ctx context.Context, userId string) (*repository.User, error)
-	UpdateUserProfileByUserID(ctx context.Context, userId string, newAvatarUri, newUsername, newPassword *string) error
-}
 
 type UserHandler struct {
-	r UserRepository
+	r *repository.UserRepository
 }
 
-func NewUserHandler(r UserRepository) *UserHandler {
+func NewUserHandler(r *repository.UserRepository) *UserHandler {
 	return &UserHandler{r: r}
 }
 
