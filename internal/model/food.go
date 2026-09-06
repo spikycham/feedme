@@ -38,8 +38,19 @@ type FoodStep struct {
 	Detail string
 }
 
-// DTO
+// DTO.
 type FoodDetail struct {
-	Food  Food
-	Steps []FoodStep
+	Food     Food
+	Steps    []FoodStep
+	Comments []FoodComment
+}
+
+// Comment.
+type FoodComment struct {
+	ID        int
+	CommentID string
+	FoodID    string
+	Detail    string
+	CreatedAt int64
+	DeletedAt int64
 }

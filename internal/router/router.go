@@ -71,7 +71,8 @@ func (router *Router) registerFood(db *sql.DB) {
 	router.handle("DELETE /api/food", h.DeleteFood)
 
 	router.handle("PUT /api/food/steps", h.UpdateFoodSteps)
-	// router.handle("POST /api/food/comment", )
+	router.handle("POST /api/food/comment", h.CreateFoodComment)
+	router.handle("DELETE /api/food/comment", h.DeleteFoodComment)
 }
 
 func (router *Router) registerOrder(db *sql.DB) {

@@ -66,8 +66,6 @@ func (r *FoodRepository) SelectAllFoods(ctx context.Context) ([]model.FoodDetail
 			detail.Food.Ingredients = ingredientsContent
 		}
 
-		detail.Steps = make([]model.FoodStep, 0)
-
 		foodDetails = append(foodDetails, detail)
 		foodMap[detail.Food.FoodID] = detail
 	}
@@ -90,6 +88,26 @@ func (r *FoodRepository) SelectAllFoods(ctx context.Context) ([]model.FoodDetail
 
 		if detail, ok := foodMap[foodId]; ok {
 			detail.Steps = append(detail.Steps, step)
+		}
+	}
+
+	comments, err := r.db.QueryContext(
+		ctx,
+		"SELECT food_id, comment_id, detail, created_at, deleted_at FROM food_comments ORDER BY food_id",
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	for comments.Next() {
+		var foodId string
+		var comment model.FoodComment
+		if err := comments.Scan(&foodId, &comment.CommentID, &comment.Detail, &comment.CreatedAt, &comment.DeletedAt); err != nil {
+			return nil, err
+		}
+
+		if detail, ok := foodMap[foodId]; ok {
+			detail.Comments = append(detail.Comments, comment)
 		}
 	}
 
@@ -273,6 +291,39 @@ func (r *FoodRepository) DeleteFoodByFoodID(ctx context.Context, foodId string) 
 	if err != nil {
 		return err
 	}
+	if rows == 0 {
+		return constant.NoAffectedRows
+	}
+
+	return nil
+}
+
+// Food comment operations.
+func (r *FoodRepository) InsertFoodCommentByFoodID(ctx context.Context, commentId, foodId, detail string) error {
+	if _, err := r.db.ExecContext(
+		ctx,
+		"INSERT INTO food_comments (comment_id, food_id, detail) VALUES (?, ?, ?)",
+		commentId,
+		foodId,
+		detail,
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *FoodRepository) DeleteFoodCommentByCommentID(ctx context.Context, commentId string) error {
+	res, err := r.db.ExecContext(ctx, "UPDATE food_comments SET deleted_at = (unixepoch()) WHERE comment_id = ? AND deleted_at = -1", commentId)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
 	if rows == 0 {
 		return constant.NoAffectedRows
 	}

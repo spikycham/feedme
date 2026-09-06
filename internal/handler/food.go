@@ -25,20 +25,27 @@ type (
 		Sort   int    `json:"sort"`
 		Detail string `json:"detail"`
 	}
+	FoodListItemComment struct {
+		CommentID string `json:"comment_id"`
+		Detail    string `json:"detail"`
+		CreatedAt int64  `json:"created_at"`
+		DeletedAt int64  `json:"deleted_at"`
+	}
 	FoodListItem struct {
-		FoodID       string             `json:"food_id"`
-		Name         string             `json:"name"`
-		Detail       string             `json:"detail"`
-		Prize        float32            `json:"prize"`
-		Rate         float32            `json:"rate"`
-		RequiredTime int64              `json:"required_time"`
-		SoldCount    int                `json:"sold_count"`
-		ImageURIs    []string           `json:"image_uris"`
-		Ingredients  []string           `json:"ingredients"`
-		Category     model.FoodCategory `json:"category"`
-		CreatedAt    int64              `json:"created_at"`
-		DeletedAt    int64              `json:"deleted_at"`
-		Steps        []FoodListItemStep `json:"steps"`
+		FoodID       string                `json:"food_id"`
+		Name         string                `json:"name"`
+		Detail       string                `json:"detail"`
+		Prize        float32               `json:"prize"`
+		Rate         float32               `json:"rate"`
+		RequiredTime int64                 `json:"required_time"`
+		SoldCount    int                   `json:"sold_count"`
+		ImageURIs    []string              `json:"image_uris"`
+		Ingredients  []string              `json:"ingredients"`
+		Category     model.FoodCategory    `json:"category"`
+		CreatedAt    int64                 `json:"created_at"`
+		DeletedAt    int64                 `json:"deleted_at"`
+		Steps        []FoodListItemStep    `json:"steps"`
+		Comments     []FoodListItemComment `json:"comments"`
 		// 0 staple food, 1 vegetable, 2 meat, 3 seafood, 4 soup, 5 dessert, 6 drink, 7 other
 	}
 	ResponseFoodList struct {
@@ -75,6 +82,16 @@ func (h *FoodHandler) GetFoodList(w http.ResponseWriter, r *http.Request) error 
 			item.Steps = append(item.Steps, FoodListItemStep{
 				Sort:   s.Sort,
 				Detail: s.Detail,
+			})
+		}
+
+		item.Comments = make([]FoodListItemComment, 0)
+		for _, c := range f.Comments {
+			item.Comments = append(item.Comments, FoodListItemComment{
+				CommentID: c.CommentID,
+				Detail:    c.Detail,
+				CreatedAt: c.CreatedAt,
+				DeletedAt: c.DeletedAt,
 			})
 		}
 
@@ -243,6 +260,55 @@ func (h *FoodHandler) DeleteFood(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if err := h.r.DeleteFoodByFoodID(r.Context(), body.FoodID); err != nil {
+		network.Error(w, http.StatusInternalServerError)
+		return err
+	}
+
+	network.WriteEmpty(w, http.StatusNoContent)
+	return nil
+}
+
+// Food comment handlers.
+type RequestCreateFoodComment struct {
+	FoodID string `json:"food_id" validate:"required"`
+	Detail string `json:"detail" validate:"required"`
+}
+
+// Only allowed to create a food comment when the user ordered the food in a order in the past.
+func (h *FoodHandler) CreateFoodComment(w http.ResponseWriter, r *http.Request) error {
+	var body RequestCreateFoodComment
+	if err := network.Read(r, &body); err != nil {
+		network.Error(w, http.StatusBadRequest)
+		return err
+	}
+
+	cid, err := random.RandID()
+	if err != nil {
+		network.Error(w, http.StatusInternalServerError)
+		return err
+	}
+
+	if err := h.r.InsertFoodCommentByFoodID(r.Context(), cid, body.FoodID, body.Detail); err != nil {
+		network.Error(w, http.StatusInternalServerError)
+		return err
+	}
+
+	network.WriteEmpty(w, http.StatusCreated)
+	return nil
+}
+
+type RequestDeleteFoodComment struct {
+	CommentID string `json:"comment_id" validate:"required"`
+}
+
+func (h *FoodHandler) DeleteFoodComment(w http.ResponseWriter, r *http.Request) error {
+	var body RequestDeleteFoodComment
+	if err := network.Read(r, &body); err != nil {
+		network.Error(w, http.StatusBadRequest)
+		return err
+	}
+
+	if err := h.r.DeleteFoodCommentByCommentID(r.Context(), body.CommentID); err != nil {
 		network.Error(w, http.StatusInternalServerError)
 		return err
 	}
