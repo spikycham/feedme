@@ -34,6 +34,7 @@ func Connect(ctx context.Context, path string) (*sql.DB, error) {
 		`); err != nil {
 		return nil, err
 	}
+
 	// Foods and orders.
 	if _, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS foods (
@@ -46,17 +47,28 @@ func Connect(ctx context.Context, path string) (*sql.DB, error) {
 			required_time INTEGER NOT NULL,
 			sold_count INTEGER NOT NULL DEFAULT 0,
 			image_uris TEXT NOT NULL DEFAULT '[]',
+			ingredients TEXT NOT NULL DEFAULT '[]',
 			category INTEGER NOT NULL,
 			created_at INTEGER NOT NULL DEFAULT (unixepoch()),
 			deleted_at INTEGER NOT NULL DEFAULT -1
 		);
+		CREATE TABLE IF NOT EXISTS food_steps (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			food_id TEXT NOT NULL,
+			sort INTEGER NOT NULL,
+			detail TEXT NOT NULL
+		);
+
 		CREATE TABLE IF NOT EXISTS orders (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			order_id TEXT NOT NULL,
+			order_id TEXT NOT NULL UNIQUE,
 			status INTEGER NOT NULL DEFAULT 0,
 			amount REAL NOT NULL,
 			created_at INTEGER NOT NULL DEFAULT (unixepoch()),
-			done_at INTEGER NOT NULL DEFAULT -1
+			done_at INTEGER NOT NULL DEFAULT -1,
+			comment TEXT NOT NULL DEFAULT '',
+			commented_at INTEGER NOT NULL DEFAULT -1,
+			comment_deleted_at INTEGER NOT NULL DEFAULT -1
 		);
 		CREATE TABLE IF NOT EXISTS order_foods (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,18 +79,13 @@ func Connect(ctx context.Context, path string) (*sql.DB, error) {
 		`); err != nil {
 		return nil, err
 	}
-	// Comments of foods and orders.
+
+	// Comments of foods.
 	if _, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS food_comments (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			comment_id TEXT NOT NULL UNIQUE,
 			food_id TEXT NOT NULL,
-			detail TEXT NOT NULL,
-			created_at INTEGER NOT NULL DEFAULT (unixepoch()),
-			deleted_at INTEGER NOT NULL DEFAULT -1
-		);
-		CREATE TABLE IF NOT EXISTS order_comments (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			order_id TEXT NOT NULL,
 			detail TEXT NOT NULL,
 			created_at INTEGER NOT NULL DEFAULT (unixepoch()),
 			deleted_at INTEGER NOT NULL DEFAULT -1

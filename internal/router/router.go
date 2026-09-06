@@ -69,6 +69,9 @@ func (router *Router) registerFood(db *sql.DB) {
 	router.handle("POST /api/food", h.CreateFood)
 	router.handle("PATCH /api/food", h.UpdateFood)
 	router.handle("DELETE /api/food", h.DeleteFood)
+
+	router.handle("PUT /api/food/steps", h.UpdateFoodSteps)
+	// router.handle("POST /api/food/comment", )
 }
 
 func (router *Router) registerOrder(db *sql.DB) {
@@ -78,4 +81,7 @@ func (router *Router) registerOrder(db *sql.DB) {
 	router.handle("GET /api/order/list", h.GetOrderList)
 	router.handle("POST /api/order", h.CreateOrder)
 	router.handle("PUT /api/order/status", h.UpdateOrderStatus)
+
+	router.handle("POST /api/order/comment", h.CreateOrderComment)
+	router.handle("DELETE /api/order/comment", h.DeleteOrderComment)
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/spikycham/feedme/internal/constant"
+	"github.com/spikycham/feedme/internal/model"
 )
 
 type FoodRepository struct {
@@ -17,73 +18,87 @@ func NewFoodRepository(db *sql.DB) *FoodRepository {
 	return &FoodRepository{db}
 }
 
-type (
-	FoodCategory int
+func (r *FoodRepository) SelectAllFoods(ctx context.Context) ([]model.FoodDetail, error) {
+	foodDetails := make([]*model.FoodDetail, 0)
+	foodMap := make(map[string]*model.FoodDetail)
 
-	Food struct {
-		ID           int
-		FoodID       string
-		Name         string
-		Detail       string
-		Prize        float32
-		Rate         float32
-		RequiredTime int64
-		SoldCount    int
-		ImageURIs    []string
-		Category     FoodCategory // 0 staple food, 1 vegetable, 2 meat, 3 seafood, 4 soup, 5 dessert, 6 drink, 7 other
-		CreatedAt    int64
-		DeletedAt    int64
-	}
-)
-
-// PERF: i guess the dish types could be mixed, but i would just
-// skip this feature and provide only one type to each dish.
-const (
-	FoodCategoryStaple FoodCategory = iota
-	FoodCategoryVegetable
-	FoodCategoryMeat
-	FoodCategorySeafood
-	FoodCategorySoup
-	FoodCategoryDessert
-	FoodCategoryDrink
-	FoodCategoryOther
-)
-
-func (r *FoodRepository) SelectAllFoods(ctx context.Context) ([]Food, error) {
-	foods := make([]Food, 0)
-
-	rows, err := r.db.QueryContext(ctx, "SELECT food_id, name, detail, prize, rate, required_time, image_uris, category, created_at, deleted_at FROM foods")
+	foods, err := r.db.QueryContext(
+		ctx,
+		"SELECT food_id, name, detail, prize, rate, required_time, image_uris, ingredients, category, created_at, deleted_at FROM foods",
+	)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer foods.Close()
 
-	for rows.Next() {
-		var food Food
+	for foods.Next() {
+		detail := &model.FoodDetail{}
 		var imgUris string
+		var ingredients string
 
-		if err := rows.Scan(
-			&food.FoodID,
-			&food.Name,
-			&food.Detail,
-			&food.Prize,
-			&food.Rate,
-			&food.RequiredTime,
+		if err := foods.Scan(
+			&detail.Food.FoodID,
+			&detail.Food.Name,
+			&detail.Food.Detail,
+			&detail.Food.Prize,
+			&detail.Food.Rate,
+			&detail.Food.RequiredTime,
 			&imgUris,
-			&food.Category,
-			&food.CreatedAt,
-			&food.DeletedAt,
+			&ingredients,
+			&detail.Food.Category,
+			&detail.Food.CreatedAt,
+			&detail.Food.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
 
-		food.ID = -1
-		food.ImageURIs = strings.Split(imgUris[1:len(imgUris)-1], ",")
+		imgUrisContent := strings.Split(imgUris[1:len(imgUris)-1], ",")
+		if imgUrisContent[0] == "" {
+			detail.Food.ImageURIs = []string{}
+		} else {
+			detail.Food.ImageURIs = imgUrisContent
+		}
 
-		foods = append(foods, food)
+		ingredientsContent := strings.Split(ingredients[1:len(ingredients)-1], ",")
+		if ingredientsContent[0] == "" {
+			detail.Food.Ingredients = []string{}
+		} else {
+			detail.Food.Ingredients = ingredientsContent
+		}
+
+		detail.Steps = make([]model.FoodStep, 0)
+
+		foodDetails = append(foodDetails, detail)
+		foodMap[detail.Food.FoodID] = detail
 	}
 
-	return foods, nil
+	steps, err := r.db.QueryContext(
+		ctx,
+		"SELECT food_id, sort, detail FROM food_steps ORDER BY food_id, sort",
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer steps.Close()
+
+	for steps.Next() {
+		var foodId string
+		var step model.FoodStep
+		if err := steps.Scan(&foodId, &step.Sort, &step.Detail); err != nil {
+			return nil, err
+		}
+
+		if detail, ok := foodMap[foodId]; ok {
+			detail.Steps = append(detail.Steps, step)
+		}
+	}
+
+	result := make([]model.FoodDetail, len(foodDetails))
+	for i, detail := range foodDetails {
+		result[i] = *detail
+	}
+
+	return result, nil
 }
 
 type InsertFoodParams struct {
@@ -94,15 +109,23 @@ type InsertFoodParams struct {
 	Rate         float32
 	RequiredTime int64
 	ImageURIs    []string
-	Category     FoodCategory // 0 staple food, 1 vegetable, 2 meat, 3 seafood, 4 soup, 5 dessert, 6 drink, 7 other
+	Ingredients  []string
+	Category     model.FoodCategory // 0 staple food, 1 vegetable, 2 meat, 3 seafood, 4 soup, 5 dessert, 6 drink, 7 other
+	Steps        []model.FoodStep
 }
 
 func (r *FoodRepository) InsertFood(ctx context.Context, p *InsertFoodParams) error {
-	if _, err := r.db.ExecContext(
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.ExecContext(
 		ctx, `
 		INSERT INTO foods (
-			food_id, name, detail, prize, rate, required_time, image_uris, category
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			food_id, name, detail, prize, rate, required_time, image_uris, ingredients, category
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`,
 		p.FoodID,
 		p.Name,
@@ -110,12 +133,30 @@ func (r *FoodRepository) InsertFood(ctx context.Context, p *InsertFoodParams) er
 		p.Prize,
 		p.Rate,
 		p.RequiredTime,
-		fmt.Sprintf("[%s]", strings.Join(p.ImageURIs, ", ")),
+		fmt.Sprintf("[%s]", strings.Join(p.ImageURIs, ",")),
+		fmt.Sprintf("[%s]", strings.Join(p.Ingredients, ",")),
 		p.Category,
 	); err != nil {
 		return err
 	}
-	return nil
+
+	for _, s := range p.Steps {
+		if _, err := tx.ExecContext(
+			ctx,
+			`
+			INSERT INTO food_steps (
+				food_id, sort, detail
+			) VALUES (?, ?, ?)
+			`,
+			s.FoodID,
+			s.Sort,
+			s.Detail,
+		); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 type UpdateFoodParams struct {
@@ -124,8 +165,9 @@ type UpdateFoodParams struct {
 	Prize        *float32
 	Rate         *float32
 	RequiredTime *int64
-	ImageURIs    *[]string
-	Category     *FoodCategory // 0 staple food, 1 vegetable, 2 meat, 3 seafood, 4 soup, 5 dessert, 6 drink, 7 other
+	ImageURIs    []string
+	Ingredients  []string            `json:"ingredients"`
+	Category     *model.FoodCategory // 0 staple food, 1 vegetable, 2 meat, 3 seafood, 4 soup, 5 dessert, 6 drink, 7 other
 }
 
 func (r *FoodRepository) UpdateFoodByFoodID(ctx context.Context, foodId string, p *UpdateFoodParams) error {
@@ -154,7 +196,11 @@ func (r *FoodRepository) UpdateFoodByFoodID(ctx context.Context, foodId string, 
 	}
 	if p.ImageURIs != nil {
 		sets = append(sets, "image_uris = ?")
-		args = append(args, fmt.Sprintf("[%s]", strings.Join(*p.ImageURIs, ", ")))
+		args = append(args, fmt.Sprintf("[%s]", strings.Join(p.ImageURIs, ", ")))
+	}
+	if p.Ingredients != nil {
+		sets = append(sets, "ingredients = ?")
+		args = append(args, fmt.Sprintf("[%s]", strings.Join(p.Ingredients, ", ")))
 	}
 	if p.Category != nil {
 		sets = append(sets, "category = ?")
@@ -182,6 +228,39 @@ func (r *FoodRepository) UpdateFoodByFoodID(ctx context.Context, foodId string, 
 	}
 
 	return nil
+}
+
+func (r *FoodRepository) UpdateFoodStepsByFoodID(ctx context.Context, foodId string, steps []model.FoodStep) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	if _, err := tx.ExecContext(
+		ctx,
+		"DELETE FROM food_steps WHERE food_id = ?",
+		foodId,
+	); err != nil {
+		return err
+	}
+
+	for _, s := range steps {
+		if _, err := tx.ExecContext(
+			ctx,
+			`
+			INSERT INTO food_steps (
+				food_id, sort, detail
+			) VALUES (?, ?, ?)
+			`,
+			foodId,
+			s.Sort,
+			s.Detail,
+		); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (r *FoodRepository) DeleteFoodByFoodID(ctx context.Context, foodId string) error {
