@@ -1,10 +1,15 @@
 package handler
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
+	"github.com/spikycham/feedme/internal/constant"
 	"github.com/spikycham/feedme/internal/repository"
 	"github.com/spikycham/feedme/pkg/network"
 	"github.com/spikycham/feedme/pkg/token"
@@ -61,9 +66,18 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// Validate the password.
-	// TODO: set the password to hashed string.
-	// TODO: parse the password from the md5 hashed password in request body.
-	if strings.Compare(body.Password, user.Password) != 0 {
+	// Compare the password after hashing with a secret key from the environment.
+	secret := os.Getenv("HMAC_SECRET_KEY")
+	if secret == "" {
+		network.Error(w, http.StatusInternalServerError)
+		return constant.MissingImportantEnv
+	}
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(body.Password))
+	macPwd := hex.EncodeToString(mac.Sum(nil))
+
+	if strings.Compare(macPwd, user.Password) != 0 {
 		network.Error(w, http.StatusUnauthorized)
 		return fmt.Errorf("account: %s logged with incorrect password", body.Account)
 	}

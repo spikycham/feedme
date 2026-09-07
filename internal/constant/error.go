@@ -21,3 +21,8 @@ var (
 	InvalidFileExt   = errors.New("invalid file extension")
 	ErrOutOfRange    = errors.New("the value is out of range")
 )
+
+// Enviroment errors.
+var (
+	MissingImportantEnv = errors.New("missing important enviroment arguments")
+)
