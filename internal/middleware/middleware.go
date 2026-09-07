@@ -5,8 +5,8 @@ import "net/http"
 func Register(h http.Handler) http.Handler {
 	// The later ones are the outside ones.
 	// TODO: remember to restore the auth middleware.
-	// return chain(h, AuthMiddleware, CorsMiddleware)
-	return chain(h, CorsMiddleware)
+	return chain(h, CorsMiddleware, AuthMiddleware)
+	// return chain(h, CorsMiddleware)
 }
 
 func chain(h http.Handler, middleware ...func(http.Handler) http.Handler) http.Handler {
