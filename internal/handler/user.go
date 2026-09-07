@@ -81,7 +81,7 @@ func (h *UserHandler) ChangeProfile(w http.ResponseWriter, r *http.Request) erro
 
 	userId, ok := r.Context().Value(middleware.USER_ID_KEY).(string)
 	if !ok {
-		network.Error(w, http.StatusUnauthorized)
+		network.Error(w, http.StatusInternalServerError)
 		return constant.InvalidParsedToken
 	}
 

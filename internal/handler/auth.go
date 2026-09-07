@@ -78,7 +78,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 	macPwd := hex.EncodeToString(mac.Sum(nil))
 
 	if strings.Compare(macPwd, user.Password) != 0 {
-		network.Error(w, http.StatusUnauthorized)
+		// We cannot use 401 as we need to validate
+		// the 401 and resend request in the frontend.
+		network.Error(w, http.StatusInternalServerError)
 		return fmt.Errorf("account: %s logged with incorrect password", body.Account)
 	}
 
@@ -114,6 +116,43 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// TODO: implement this.
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type RequestRefreshToken struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) error {
+	var body RequestRefreshToken
+	if err := network.Read(r, &body); err != nil {
+		network.Error(w, http.StatusInternalServerError)
+		return err
+	}
+
+	// TODO: validate the refresh token and get the user_id from the same table.
+	network.Error(w, http.StatusInternalServerError) // assume the refresh token is expired.
+	return constant.InvalidRefreshToken
+
+	// Generate a new access token and a refresh token.
+	// TODO: change this "a1b2c3" to the user_id by reading the refresh_tokens table.
+	at, err := token.Sign("a1b2c3")
+	if err != nil {
+		network.Error(w, http.StatusInternalServerError)
+		return err
+	}
+
+	rt, err := token.RandBase64(32)
+	if err != nil {
+		network.Error(w, http.StatusInternalServerError)
+		return err
+	}
+
+	network.Write(w, &ResponseToken{
+		AccessToken:  at,
+		RefreshToken: rt,
+	})
 	return nil
 }

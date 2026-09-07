@@ -45,6 +45,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 }
 
 func isPublic(path string) bool {
-	public := []string{"/api/auth/login"}
+	public := []string{"/api/auth/login", "/api/auth/token"}
 	return slices.Contains(public, path)
 }

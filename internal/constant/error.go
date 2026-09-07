@@ -4,9 +4,10 @@ import "errors"
 
 // Network errors.
 var (
-	InvalidJSON        = errors.New("invalid json")
-	InvalidSchema      = errors.New("invalid json schema")
-	InvalidParsedToken = errors.New("invalid parsed token")
+	InvalidJSON         = errors.New("invalid json")
+	InvalidSchema       = errors.New("invalid json schema")
+	InvalidParsedToken  = errors.New("invalid parsed token")
+	InvalidRefreshToken = errors.New("invalid refresh token")
 )
 
 // Database errors.

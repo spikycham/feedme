@@ -46,6 +46,8 @@ func (router *Router) registerAuth(db *sql.DB) {
 
 	router.handle("POST /api/auth/login", h.Login)
 	router.handle("POST /api/auth/logout", h.Logout)
+
+	router.handle("POST /api/auth/token", h.RefreshToken)
 }
 
 func (router *Router) registerUser(db *sql.DB) {
