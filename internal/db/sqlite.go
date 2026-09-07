@@ -31,7 +31,19 @@ func Connect(ctx context.Context, path string) (*sql.DB, error) {
 			profile_background_uri TEXT NOT NULL DEFAULT '',
 			created_at INTEGER NOT NULL DEFAULT (unixepoch())
 		);
-		`); err != nil {
+	`); err != nil {
+		return nil, err
+	}
+	// Refresh token.
+	if _, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS tokens (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id TEXT NOT NULL,
+			token TEXT NOT NULL UNIQUE,
+			created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+			expired_at INTEGER NOT NULL
+		);
+	`); err != nil {
 		return nil, err
 	}
 
@@ -76,7 +88,7 @@ func Connect(ctx context.Context, path string) (*sql.DB, error) {
 			food_id TEXT NOT NULL,
 			food_count INTEGER NOT NULL
 		);
-		`); err != nil {
+	`); err != nil {
 		return nil, err
 	}
 

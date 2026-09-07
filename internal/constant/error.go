@@ -7,7 +7,7 @@ var (
 	InvalidJSON         = errors.New("invalid json")
 	InvalidSchema       = errors.New("invalid json schema")
 	InvalidParsedToken  = errors.New("invalid parsed token")
-	InvalidRefreshToken = errors.New("invalid refresh token")
+	RefreshTokenExpired = errors.New("refresh token expired")
 )
 
 // Database errors.

@@ -1,8 +1,6 @@
 package token
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"os"
 	"time"
@@ -48,12 +46,4 @@ func Validate(tokenStr string) (string, error) {
 	}
 
 	return userId, nil
-}
-
-func RandBase64(n int) (string, error) {
-	b := make([]byte, n)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return base64.RawURLEncoding.EncodeToString(b), nil
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/spikycham/feedme/internal/constant"
+	"github.com/spikycham/feedme/internal/model"
 )
 
 type UserRepository struct {
@@ -17,8 +18,8 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db}
 }
 
-func (r *UserRepository) GetUserByUserID(ctx context.Context, userId string) (*User, error) {
-	var user User
+func (r *UserRepository) GetUserByUserID(ctx context.Context, userId string) (*model.User, error) {
+	var user model.User
 	if err := r.db.QueryRowContext(ctx, "SELECT user_id, name, account, role, avatar_uri, profile_background_uri, created_at FROM users WHERE user_id = ?", userId).Scan(
 		&user.UserID,
 		&user.Name,

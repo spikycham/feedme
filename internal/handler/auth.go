@@ -8,10 +8,13 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spikycham/feedme/internal/constant"
+	"github.com/spikycham/feedme/internal/model"
 	"github.com/spikycham/feedme/internal/repository"
 	"github.com/spikycham/feedme/pkg/network"
+	"github.com/spikycham/feedme/pkg/random"
 	"github.com/spikycham/feedme/pkg/token"
 )
 
@@ -37,13 +40,13 @@ type (
 		RefreshToken string `json:"refresh_token"`
 	}
 	ResponseUser struct {
-		UserID               string              `json:"user_id"`
-		Name                 string              `json:"name"`
-		Account              string              `json:"account"`
-		Role                 repository.UserRole `json:"role"`
-		AvatarURI            string              `json:"avatar_uri"`
-		ProfileBackgroundURI string              `json:"profile_background_uri"`
-		CreatedAt            int64               `json:"created_at"`
+		UserID               string         `json:"user_id"`
+		Name                 string         `json:"name"`
+		Account              string         `json:"account"`
+		Role                 model.UserRole `json:"role"`
+		AvatarURI            string         `json:"avatar_uri"`
+		ProfileBackgroundURI string         `json:"profile_background_uri"`
+		CreatedAt            int64          `json:"created_at"`
 	}
 	ResponseLogin struct {
 		Token ResponseToken `json:"token"`
@@ -90,11 +93,17 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 		network.Error(w, http.StatusInternalServerError)
 		return err
 	}
-	// TODO: store the refresh token to sqlite database.
-	// Use psql is already enough for this project.
-	rt, err := token.RandBase64(32)
+	// Store the refresh token to sqlite database.
+	// Use sqlite is already enough for this project.
+	rt, err := random.RandBase64(32)
 	if err != nil {
 		network.Error(w, http.StatusInternalServerError)
+		return err
+	}
+
+	expiredAt := time.Now().Add(7 * 24 * time.Hour).Unix()
+	if err := h.r.InsertRefreshToken(r.Context(), user.UserID, rt, expiredAt); err != nil {
+		network.Error(w, http.StatusUnauthorized)
 		return err
 	}
 
@@ -132,21 +141,34 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
-	// TODO: validate the refresh token and get the user_id from the same table.
-	network.Error(w, http.StatusInternalServerError) // assume the refresh token is expired.
-	return constant.InvalidRefreshToken
-
-	// Generate a new access token and a refresh token.
-	// TODO: change this "a1b2c3" to the user_id by reading the refresh_tokens table.
-	at, err := token.Sign("a1b2c3")
+	// Validate the refresh token and get the user_id from the same table.
+	row, err := h.r.GetExpiredAtByRefreshToken(r.Context(), body.RefreshToken)
 	if err != nil {
 		network.Error(w, http.StatusInternalServerError)
 		return err
 	}
 
-	rt, err := token.RandBase64(32)
+	if row.ExpiredAt < time.Now().Unix() {
+		network.Error(w, http.StatusUnauthorized)
+		return constant.RefreshTokenExpired
+	}
+
+	// Generate a new access token and a refresh token.
+	at, err := token.Sign(row.UserID)
 	if err != nil {
 		network.Error(w, http.StatusInternalServerError)
+		return err
+	}
+
+	rt, err := random.RandBase64(32)
+	if err != nil {
+		network.Error(w, http.StatusInternalServerError)
+		return err
+	}
+
+	// Insert the new refresh token to databse.
+	expiredAt := time.Now().Add(7 * 24 * time.Hour).Unix()
+	if err := h.r.InsertRefreshToken(r.Context(), row.UserID, rt, expiredAt); err != nil {
 		return err
 	}
 
