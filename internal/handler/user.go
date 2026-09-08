@@ -27,24 +27,15 @@ func NewUserHandler(r *repository.UserRepository) *UserHandler {
 }
 
 // Handlers type structs.
-type (
-	// Me.
-	ResponseMe struct {
-		UserID               string         `json:"user_id"`
-		Name                 string         `json:"name"`
-		Account              string         `json:"account"`
-		Role                 model.UserRole `json:"role"`
-		AvatarURI            string         `json:"avatar_uri"`
-		ProfileBackgroundURI string         `json:"profile_background_uri"`
-		CreatedAt            int64          `json:"created_at"`
-	}
-	// Change avatar uri, username, password.
-	RequestChangeProfile struct {
-		NewAvatarURI *string `json:"new_avatar_uri"`
-		NewUsername  *string `json:"new_username" validate:"min=2, max=10"`
-		NewPassword  *string `json:"new_password" validate:"min=6, max=20"`
-	}
-)
+type ResponseMe struct {
+	UserID               string         `json:"user_id"`
+	Name                 string         `json:"name"`
+	Account              string         `json:"account"`
+	Role                 model.UserRole `json:"role"`
+	AvatarURI            string         `json:"avatar_uri"`
+	ProfileBackgroundURI string         `json:"profile_background_uri"`
+	CreatedAt            int64          `json:"created_at"`
+}
 
 // Response the user profiles through the token.
 func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) error {
@@ -71,6 +62,14 @@ func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// Change avatar uri, username, password.
+type RequestChangeProfile struct {
+	NewAvatarURI            *string `json:"new_avatar_uri"`
+	NewUsername             *string `json:"new_username" validate:"min=2, max=10"`
+	NewPassword             *string `json:"new_password" validate:"min=6, max=20"`
+	NewProfileBackgroundURI *string `json:"new_profile_background_uri"`
+}
+
 // Change avatar, username and password.
 func (h *UserHandler) ChangeProfile(w http.ResponseWriter, r *http.Request) error {
 	var body RequestChangeProfile
@@ -90,18 +89,22 @@ func (h *UserHandler) ChangeProfile(w http.ResponseWriter, r *http.Request) erro
 		return constant.InvalidParsedToken
 	}
 
-	// Hash the password.
-	secret := os.Getenv("HMAC_SECRET_KEY")
-	if secret == "" {
-		network.Error(w, http.StatusInternalServerError)
-		return constant.MissingImportantEnv
+	var macPwd *string
+	if body.NewPassword != nil {
+		// Hash the password.
+		secret := os.Getenv("HMAC_SECRET_KEY")
+		if secret == "" {
+			network.Error(w, http.StatusInternalServerError)
+			return constant.MissingImportantEnv
+		}
+
+		mac := hmac.New(sha256.New, []byte(secret))
+		mac.Write([]byte(*body.NewPassword))
+		hashed := hex.EncodeToString(mac.Sum(nil))
+		macPwd = &hashed
 	}
 
-	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write([]byte(*body.NewPassword))
-	macPwd := hex.EncodeToString(mac.Sum(nil))
-
-	if err := h.r.UpdateUserProfileByUserID(r.Context(), userId, body.NewAvatarURI, body.NewUsername, &macPwd); err != nil {
+	if err := h.r.UpdateUserProfileByUserID(r.Context(), userId, body.NewAvatarURI, body.NewUsername, macPwd, body.NewProfileBackgroundURI); err != nil {
 		// 404
 		if errors.Is(err, constant.NoAffectedRows) {
 			network.WriteEmpty(w, http.StatusNotFound)

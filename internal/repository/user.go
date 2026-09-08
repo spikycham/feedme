@@ -34,7 +34,7 @@ func (r *UserRepository) GetUserByUserID(ctx context.Context, userId string) (*m
 	return &user, nil
 }
 
-func (r *UserRepository) UpdateUserProfileByUserID(ctx context.Context, userId string, newAvatarUri, newUsername, newPassword *string) error {
+func (r *UserRepository) UpdateUserProfileByUserID(ctx context.Context, userId string, newAvatarUri, newUsername, newPassword, newProfileBackgroundUri *string) error {
 	var sets []string
 	var args []any
 
@@ -49,6 +49,10 @@ func (r *UserRepository) UpdateUserProfileByUserID(ctx context.Context, userId s
 	if newPassword != nil {
 		sets = append(sets, "password = ?")
 		args = append(args, *newPassword)
+	}
+	if newProfileBackgroundUri != nil {
+		sets = append(sets, "profile_background_uri = ?")
+		args = append(args, *newProfileBackgroundUri)
 	}
 
 	if len(sets) == 0 {
