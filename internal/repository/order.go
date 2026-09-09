@@ -80,6 +80,10 @@ func (r *OrderRepository) InsertOrder(ctx context.Context, p *InsertOrderParams)
 		if _, err := tx.ExecContext(ctx, "INSERT INTO order_foods (order_id, food_id, food_count) VALUES (?, ?, ?)", p.OrderID, f.FoodID, f.Count); err != nil {
 			return err
 		}
+
+		if _, err := tx.ExecContext(ctx, "UPDATE foods SET sold_count = sold_count + 1 WHERE food_id = ?", f.FoodID); err != nil {
+			return err
+		}
 	}
 
 	if err := tx.Commit(); err != nil {

@@ -175,11 +175,11 @@ func (h *FoodHandler) CreateFood(w http.ResponseWriter, r *http.Request) error {
 // Update a food handler.
 type RequestUpdateFood struct {
 	FoodID       string              `json:"food_id" validate:"required"`
-	Name         string              `json:"name"`
-	Detail       string              `json:"detail"`
+	Name         *string             `json:"name"`
+	Detail       *string             `json:"detail"`
 	Prize        *float32            `json:"prize"`
 	Rate         *float32            `json:"rate"`
-	RequiredTime int64               `json:"required_time"`
+	RequiredTime *int64              `json:"required_time"`
 	ImageURIs    []string            `json:"image_uris"`
 	Ingredients  []string            `json:"ingredients"`
 	Category     *model.FoodCategory `json:"category"`
@@ -211,11 +211,11 @@ func (h *FoodHandler) UpdateFood(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	p := &repository.UpdateFoodParams{
-		Name:         &body.Name,
-		Detail:       &body.Detail,
+		Name:         body.Name,
+		Detail:       body.Detail,
 		Prize:        body.Prize,
 		Rate:         body.Rate,
-		RequiredTime: &body.RequiredTime,
+		RequiredTime: body.RequiredTime,
 		ImageURIs:    body.ImageURIs,
 		Ingredients:  body.Ingredients,
 		Category:     body.Category,
