@@ -132,6 +132,10 @@ func (h *FoodHandler) CreateFood(w http.ResponseWriter, r *http.Request) error {
 		network.Error(w, http.StatusBadRequest)
 		return constant.ErrOutOfRange
 	}
+	if len(body.ImageURIs) > 3 {
+		network.Error(w, http.StatusBadRequest)
+		return constant.ErrOutOfRange
+	}
 
 	fid, err := random.RandID()
 	if err != nil {
@@ -194,6 +198,10 @@ func (h *FoodHandler) UpdateFood(w http.ResponseWriter, r *http.Request) error {
 		return constant.ErrOutOfRange
 	}
 	if *body.Rate < 0 || *body.Rate > 5 {
+		network.Error(w, http.StatusBadRequest)
+		return constant.ErrOutOfRange
+	}
+	if len(body.ImageURIs) > 3 {
 		network.Error(w, http.StatusBadRequest)
 		return constant.ErrOutOfRange
 	}
