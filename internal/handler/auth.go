@@ -125,8 +125,23 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// TODO: implement this.
+type RequestLogout struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) error {
+	var body RequestLogout
+	if err := network.Read(r, &body); err != nil {
+		network.Error(w, http.StatusBadRequest)
+		return err
+	}
+
+	if err := h.r.DeleteRefreshTokenByToken(r.Context(), body.RefreshToken); err != nil {
+		network.Error(w, http.StatusInternalServerError)
+		return err
+	}
+
+	network.WriteEmpty(w, http.StatusNoContent)
 	return nil
 }
 
@@ -168,7 +183,7 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) error
 
 	// Insert the new refresh token to databse.
 	expiredAt := time.Now().Add(7 * 24 * time.Hour).Unix()
-	if err := h.r.InsertRefreshToken(r.Context(), row.UserID, rt, expiredAt); err != nil {
+	if err := h.r.DeleteInsertRefreshToken(r.Context(), row.UserID, rt, expiredAt); err != nil {
 		return err
 	}
 
