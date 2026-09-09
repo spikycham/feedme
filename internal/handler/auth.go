@@ -126,7 +126,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 }
 
 type RequestLogout struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) error {
