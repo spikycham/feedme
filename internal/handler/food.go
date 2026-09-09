@@ -174,7 +174,7 @@ func (h *FoodHandler) CreateFood(w http.ResponseWriter, r *http.Request) error {
 
 // Update a food handler.
 type RequestUpdateFood struct {
-	FoodID       string              `json:"food_id"`
+	FoodID       string              `json:"food_id" validate:"required"`
 	Name         string              `json:"name"`
 	Detail       string              `json:"detail"`
 	Prize        *float32            `json:"prize"`
@@ -193,13 +193,17 @@ func (h *FoodHandler) UpdateFood(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// Validate the bussiness logic of the prize and rate.
-	if *body.Prize < 0 || *body.Prize > 9999.99 {
-		network.Error(w, http.StatusBadRequest)
-		return constant.ErrOutOfRange
+	if body.Prize != nil {
+		if *body.Prize < 0 || *body.Prize > 9999.99 {
+			network.Error(w, http.StatusBadRequest)
+			return constant.ErrOutOfRange
+		}
 	}
-	if *body.Rate < 0 || *body.Rate > 5 {
-		network.Error(w, http.StatusBadRequest)
-		return constant.ErrOutOfRange
+	if body.Rate != nil {
+		if *body.Rate < 0 || *body.Rate > 5 {
+			network.Error(w, http.StatusBadRequest)
+			return constant.ErrOutOfRange
+		}
 	}
 	if len(body.ImageURIs) > 3 {
 		network.Error(w, http.StatusBadRequest)
