@@ -21,7 +21,7 @@ type (
 	OrderListItem struct {
 		OrderID          string            `json:"order_id"`
 		Status           model.OrderStatus `json:"status"`
-		Amount           float64           `json:"amoun"`
+		Amount           float64           `json:"amount"`
 		CreatedAt        int64             `json:"created_at"`
 		DoneAt           int64             `json:"done_at"`
 		Comment          string            `json:"comment"`
