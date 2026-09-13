@@ -18,6 +18,10 @@ func NewOrderHandler(r *repository.OrderRepository) *OrderHandler {
 }
 
 type (
+	OrderFood struct {
+		FoodID string `json:"food_id"`
+		Count  int    `json:"count"`
+	}
 	OrderListItem struct {
 		OrderID          string            `json:"order_id"`
 		Status           model.OrderStatus `json:"status"`
@@ -27,7 +31,7 @@ type (
 		Comment          string            `json:"comment"`
 		CommentedAt      int64             `json:"commented_at"`
 		CommentDeletedAt int64             `json:"comment_deleted_at"`
-		Foods            []model.OrderFood `json:"foods"`
+		Foods            []OrderFood       `json:"foods"`
 	}
 	ResponseOrderList struct {
 		List []OrderListItem `json:"list"`
@@ -53,11 +57,16 @@ func (h *OrderHandler) GetOrderList(w http.ResponseWriter, r *http.Request) erro
 			CommentedAt:      o.CommentedAt,
 			CommentDeletedAt: o.CommentDeletedAt,
 		}
-		order.Foods = make([]model.OrderFood, 0)
-		order.Foods = append(order.Foods, o.Foods...)
+		order.Foods = make([]OrderFood, 0)
+
+		for _, f := range o.Foods {
+			order.Foods = append(order.Foods, OrderFood{
+				FoodID: f.FoodID,
+				Count:  f.Count,
+			})
+		}
 
 		resp = append(resp, order)
-
 	}
 
 	network.Write(w, &ResponseOrderList{List: resp})
