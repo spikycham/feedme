@@ -19,3 +19,21 @@ type Order struct {
 	CommentedAt      int64
 	CommentDeletedAt int64
 }
+
+// DTO
+type OrderFood struct {
+	FoodID string
+	Count  int
+}
+
+type OrderDetail struct {
+	OrderID          string
+	Status           OrderStatus
+	Amount           float64
+	CreatedAt        int64
+	DoneAt           int64
+	Comment          string
+	CommentedAt      int64
+	CommentDeletedAt int64
+	Foods            []OrderFood
+}

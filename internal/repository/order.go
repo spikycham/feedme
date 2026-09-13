@@ -16,15 +16,18 @@ func NewOrderRepository(db *sql.DB) *OrderRepository {
 	return &OrderRepository{db}
 }
 
-func (r *OrderRepository) SelectAllOrders(ctx context.Context) ([]model.Order, error) {
-	rows, err := r.db.QueryContext(ctx, "SELECT order_id, status, amount, created_at, done_at, comment, commented_at, comment_deleted_at FROM orders")
+func (r *OrderRepository) SelectAllOrders(ctx context.Context) ([]model.OrderDetail, error) {
+	rows, err := r.db.QueryContext(
+		ctx,
+		"SELECT order_id, status, amount, created_at, done_at, comment, commented_at, comment_deleted_at FROM orders",
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	orders := make([]model.Order, 0)
+	orders := make([]model.OrderDetail, 0)
 	for rows.Next() {
-		var order model.Order
+		var order model.OrderDetail
 		if err := rows.Scan(
 			&order.OrderID,
 			&order.Status,
@@ -37,9 +40,37 @@ func (r *OrderRepository) SelectAllOrders(ctx context.Context) ([]model.Order, e
 		); err != nil {
 			return nil, err
 		}
-		order.ID = -1
+
+		frows, err := r.db.QueryContext(
+			ctx,
+			"SELECT food_id, food_count FROM order_foods WHERE order_id = ?",
+			order.OrderID,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		foods := make([]model.OrderFood, 0)
+		for frows.Next() {
+			var food model.OrderFood
+			if err := frows.Scan(
+				&food.FoodID,
+				&food.Count,
+			); err != nil {
+				return nil, err
+			}
+
+			foods = append(foods, food)
+		}
+
+		if err := frows.Err(); err != nil {
+			return nil, err
+		}
 
 		orders = append(orders, order)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return orders, nil

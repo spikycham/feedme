@@ -27,6 +27,7 @@ type (
 		Comment          string            `json:"comment"`
 		CommentedAt      int64             `json:"commented_at"`
 		CommentDeletedAt int64             `json:"comment_deleted_at"`
+		Foods            []model.OrderFood `json:"foods"`
 	}
 	ResponseOrderList struct {
 		List []OrderListItem `json:"list"`
@@ -42,7 +43,7 @@ func (h *OrderHandler) GetOrderList(w http.ResponseWriter, r *http.Request) erro
 
 	resp := make([]OrderListItem, 0)
 	for _, o := range orders {
-		resp = append(resp, OrderListItem{
+		order := OrderListItem{
 			OrderID:          o.OrderID,
 			Status:           o.Status,
 			Amount:           o.Amount,
@@ -51,7 +52,12 @@ func (h *OrderHandler) GetOrderList(w http.ResponseWriter, r *http.Request) erro
 			Comment:          o.Comment,
 			CommentedAt:      o.CommentedAt,
 			CommentDeletedAt: o.CommentDeletedAt,
-		})
+		}
+		order.Foods = make([]model.OrderFood, 0)
+		order.Foods = append(order.Foods, o.Foods...)
+
+		resp = append(resp, order)
+
 	}
 
 	network.Write(w, &ResponseOrderList{List: resp})
