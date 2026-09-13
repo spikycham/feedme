@@ -54,3 +54,42 @@ func (r *AuthRepository) InsertRefreshToken(ctx context.Context, userId, token s
 	}
 	return nil
 }
+
+func (r *AuthRepository) DeleteRefreshTokenByToken(ctx context.Context, token string) error {
+	if _, err := r.db.ExecContext(
+		ctx,
+		"UPDATE tokens SET expired_at = (unixepoch()) WHERE token = ?",
+		token,
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *AuthRepository) DeleteInsertRefreshToken(ctx context.Context, userId, token string, expiredAt int64) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.ExecContext(
+		ctx,
+		"UPDATE tokens SET expired_at = unixepoch() WHERE token = ? AND expired_at > unixepoch()",
+		token,
+	); err != nil {
+		return err
+	}
+
+	if _, err := tx.ExecContext(
+		ctx,
+		"INSERT INTO tokens (user_id, token, expired_at) VALUES (?, ?, ?)",
+		userId,
+		token,
+		expiredAt,
+	); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
