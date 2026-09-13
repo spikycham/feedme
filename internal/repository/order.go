@@ -67,6 +67,7 @@ func (r *OrderRepository) SelectAllOrders(ctx context.Context) ([]model.OrderDet
 			return nil, err
 		}
 
+		order.Foods = foods
 		orders = append(orders, order)
 	}
 	if err := rows.Err(); err != nil {
