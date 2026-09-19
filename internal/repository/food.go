@@ -24,7 +24,7 @@ func (r *FoodRepository) SelectAllFoods(ctx context.Context) ([]model.FoodDetail
 
 	foods, err := r.db.QueryContext(
 		ctx,
-		"SELECT food_id, name, detail, prize, rate, required_time, image_uris, ingredients, category, created_at, deleted_at FROM foods",
+		"SELECT food_id, name, detail, prize, rate, required_time, sold_count, image_uris, ingredients, category, created_at, deleted_at FROM foods",
 	)
 	if err != nil {
 		return nil, err
@@ -43,6 +43,7 @@ func (r *FoodRepository) SelectAllFoods(ctx context.Context) ([]model.FoodDetail
 			&detail.Food.Prize,
 			&detail.Food.Rate,
 			&detail.Food.RequiredTime,
+			&detail.Food.SoldCount,
 			&imgUris,
 			&ingredients,
 			&detail.Food.Category,
