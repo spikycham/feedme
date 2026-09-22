@@ -113,7 +113,7 @@ func (r *OrderRepository) InsertOrder(ctx context.Context, p *InsertOrderParams)
 			return err
 		}
 
-		if _, err := tx.ExecContext(ctx, "UPDATE foods SET sold_count = sold_count + 1 WHERE food_id = ?", f.FoodID); err != nil {
+		if _, err := tx.ExecContext(ctx, "UPDATE foods SET sold_count = sold_count + ? WHERE food_id = ?", f.Count, f.FoodID); err != nil {
 			return err
 		}
 	}
