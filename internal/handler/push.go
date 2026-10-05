@@ -69,7 +69,7 @@ func SendPush(sub *webpush.Subscription, payload []byte) error {
 		payload,
 		sub,
 		&webpush.Options{
-			Subscriber:      "mailto:450139220@qq.com",
+			Subscriber:      "450139220@qq.com",
 			VAPIDPublicKey:  VapidPublicKey,
 			VAPIDPrivateKey: VapidPrivateKey,
 			TTL:             60,

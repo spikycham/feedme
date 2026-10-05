@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/spikycham/feedme/internal/model"
@@ -115,7 +116,7 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) error
 
 	// Send notification to the only merchant.
 	go func() {
-		if err := SendPush(SubMerchant, []byte(`{"title": "Received a new order request", "body": "Hello world!"}`)); err != nil {
+		if err := SendPush(SubMerchant, []byte(fmt.Sprintf(`{"title": "收到新的订单请求~", "body": "Cham 今天要吃 %d 个菜"}`, len(p.Foods)))); err != nil {
 			logger.New().Warn("failed to send push notification: ", err)
 		}
 	}()
