@@ -5,6 +5,7 @@ import (
 
 	"github.com/spikycham/feedme/internal/model"
 	"github.com/spikycham/feedme/internal/repository"
+	"github.com/spikycham/feedme/pkg/logger"
 	"github.com/spikycham/feedme/pkg/network"
 	"github.com/spikycham/feedme/pkg/random"
 )
@@ -112,6 +113,12 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
+	// Send notification to the only merchant.
+	go func() {
+		if err := SendPush(SubMerchant, []byte(`{"title": "Received a new order request", "body": "Hello world!"}`)); err != nil {
+			logger.New().Warn("failed to send push notification: ", err)
+		}
+	}()
 	network.WriteEmpty(w, http.StatusCreated)
 	return nil
 }

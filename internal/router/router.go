@@ -37,6 +37,7 @@ func (r *Router) Register(db *sql.DB) {
 	r.registerFile() // just for uploading files
 	r.registerFood(db)
 	r.registerOrder(db)
+	r.registerPush()
 }
 
 // Routes registration helper functions.
@@ -87,4 +88,10 @@ func (router *Router) registerOrder(db *sql.DB) {
 
 	router.handle("POST /api/order/comment", h.CreateOrderComment)
 	router.handle("DELETE /api/order/comment", h.DeleteOrderComment)
+}
+
+func (router *Router) registerPush() {
+	h := handler.NewPushHandler()
+	router.handle("GET /api/push/key", h.GetVAPIDPublicKey)
+	router.handle("POST /api/push/subscription", h.SubscribePush)
 }

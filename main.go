@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/spikycham/feedme/internal/db"
+	"github.com/spikycham/feedme/internal/handler"
 	"github.com/spikycham/feedme/internal/middleware"
 	"github.com/spikycham/feedme/internal/router"
 	"github.com/spikycham/feedme/pkg/dotenv"
@@ -21,6 +22,11 @@ func main() {
 	dotenv.Load(".env")
 	port := os.Getenv("PORT")
 	sqlUri := os.Getenv("SQL_URI")
+
+	// Generate webpush VAPID keys.
+	if err := handler.GetVAPIDKeys(); err != nil {
+		log.Error("failed to generate VAPID keys", err)
+	}
 
 	// Connect to postgres database.
 	db, err := db.Connect(ctx, sqlUri)
